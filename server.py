@@ -4,8 +4,9 @@ app = Flask(__name__)
 
 # In-memory storage for simplicity (not suitable for production)
 user_credentials = {
-    'royceraspa': {'password': 'royce2003', 'balance': 1, 'first_name': 'Royce', 'last_name': 'Raspa'},
-    'alexbeck': {'password': 'alex2003', 'balance': 0, 'first_name': 'Alex', 'last_name': 'Beck'}
+    'royceraspa': {'password': 'royce2003', 'balance': 100, 'first_name': 'Royce', 'last_name': 'Raspa'},
+    'jordanross': {'password': 'jordan2003', 'balance': 5, 'first_name': 'Jordan', 'last_name': 'Ross'},
+    'tristanlupal': {'password': 'tristan2004', 'balance': 5, 'first_name': 'Tristan', 'last_name': 'Lupal'}}
 }
 
 @app.route('/login', methods=['POST'])
@@ -51,4 +52,4 @@ def transfer_balance():
         return jsonify({'success': False, 'message': 'Invalid sender or recipient username'}), 400
 
 if __name__ == '__main__':
-    app.run(debug=True, host='10.0.0.69', port=5000)
+    app.run(debug=True, host='10.0.0.69')
