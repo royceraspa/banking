@@ -6,7 +6,7 @@ app = Flask(__name__)
 user_credentials = {
     'royceraspa': {'password': 'royce2003', 'balance': 100, 'first_name': 'Royce', 'last_name': 'Raspa'},
     'jordanross': {'password': 'jordan2003', 'balance': 5, 'first_name': 'Jordan', 'last_name': 'Ross'},
-    'tristanlupal': {'password': 'tristan2004', 'balance': 5, 'first_name': 'Tristan', 'last_name': 'Lupal'}}
+    'tristanlupal': {'password': 'tristan2004', 'balance': 5, 'first_name': 'Tristan', 'last_name': 'Lupal'}
 }
 
 @app.route('/login', methods=['POST'])
