@@ -4,20 +4,24 @@ import sqlite3
 app = Flask(__name__)
 
 # SQLite database connection
-conn = sqlite3.connect('balances.db')
-cursor = conn.cursor()
+try:
+    conn = sqlite3.connect('balances.db')
+    cursor = conn.cursor()
 
-# Create a table if it doesn't exist
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        username TEXT PRIMARY KEY,
-        password TEXT,
-        balance REAL,
-        first_name TEXT,
-        last_name TEXT
-    )
-''')
-conn.commit()
+    # Create a table if it doesn't exist
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            username TEXT PRIMARY KEY,
+            password TEXT,
+            balance REAL,
+            first_name TEXT,
+            last_name TEXT
+        )
+    ''')
+    conn.commit()
+    print("Database created successfully.")
+except Exception as e:
+    print(f"Error creating database: {str(e)}")
 
 @app.route('/login', methods=['POST'])
 def login():
