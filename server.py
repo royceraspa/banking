@@ -12,7 +12,8 @@ class User(db.Model):
     first_name = db.Column(db.String(80))
     last_name = db.Column(db.String(80))
 
-db.create_all()
+with app.app_context():
+    db.create_all()
 
 @app.route('/login', methods=['POST'])
 def login():
