@@ -1,13 +1,23 @@
 from flask import Flask, jsonify, request
+import sqlite3
 
 app = Flask(__name__)
 
-# In-memory storage for simplicity (not suitable for production)
-user_credentials = {
-    'royceraspa': {'password': 'royce2003', 'balance': 100, 'first_name': 'Royce', 'last_name': 'Raspa'},
-    'jordanross': {'password': 'jordan2003', 'balance': 5, 'first_name': 'Jordan', 'last_name': 'Ross'},
-    'tristanlupal': {'password': 'tristan2004', 'balance': 5, 'first_name': 'Tristan', 'last_name': 'Lupal'}
-}
+# SQLite database connection
+conn = sqlite3.connect('balances.db')
+cursor = conn.cursor()
+
+# Create a table if it doesn't exist
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        username TEXT PRIMARY KEY,
+        password TEXT,
+        balance REAL,
+        first_name TEXT,
+        last_name TEXT
+    )
+''')
+conn.commit()
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -15,8 +25,11 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
-    if username in user_credentials and user_credentials[username]['password'] == password:
-        user_info = user_credentials[username]
+    cursor.execute('SELECT * FROM users WHERE username = ? AND password = ?', (username, password))
+    user_data = cursor.fetchone()
+
+    if user_data:
+        user_info = {'username': user_data[0], 'balance': user_data[2], 'first_name': user_data[3], 'last_name': user_data[4]}
         return jsonify({'success': True, 'message': 'Login successful', 'user_info': user_info})
     else:
         return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
@@ -25,9 +38,11 @@ def login():
 def get_balance():
     username = request.args.get('username')
 
-    if username in user_credentials:
-        balance = user_credentials[username]['balance']
-        return jsonify({'success': True, 'balance': balance, 'message': 'Balance retrieved successfully'})
+    cursor.execute('SELECT balance FROM users WHERE username = ?', (username,))
+    balance = cursor.fetchone()
+
+    if balance is not None:
+        return jsonify({'success': True, 'balance': balance[0], 'message': 'Balance retrieved successfully'})
     else:
         return jsonify({'success': False, 'message': 'User not found'}), 404
 
@@ -36,20 +51,19 @@ def transfer_balance():
     data = request.get_json()
     sender_username = data.get('sender_username')
     recipient_username = data.get('recipient_username')
-    amount = float(data.get('amount'))  # Convert amount to float
+    amount = float(data.get('amount'))
 
-    if sender_username in user_credentials and recipient_username in user_credentials:
-        sender_balance = user_credentials[sender_username]['balance']
+    cursor.execute('SELECT balance FROM users WHERE username = ?', (sender_username,))
+    sender_balance = cursor.fetchone()
 
-        if sender_balance >= amount >= 0:
-            user_credentials[sender_username]['balance'] -= amount
-            user_credentials[recipient_username]['balance'] += amount
+    if sender_balance is not None and sender_balance[0] >= amount >= 0:
+        cursor.execute('UPDATE users SET balance = balance - ? WHERE username = ?', (amount, sender_username))
+        cursor.execute('UPDATE users SET balance = balance + ? WHERE username = ?', (amount, recipient_username))
+        conn.commit()
 
-            return jsonify({'success': True, 'message': 'Balance transfer successful'})
-        else:
-            return jsonify({'success': False, 'message': 'Insufficient funds or invalid amount'}), 400
+        return jsonify({'success': True, 'message': 'Balance transfer successful'})
     else:
-        return jsonify({'success': False, 'message': 'Invalid sender or recipient username'}), 400
+        return jsonify({'success': False, 'message': 'Insufficient funds or invalid amount'}), 400
 
 if __name__ == '__main__':
     app.run(debug=True, host='10.0.0.69')
