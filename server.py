@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, render_template, request, jsonify
 import sqlite3
 
 app = Flask(__name__)
@@ -64,6 +64,30 @@ def transfer_balance():
         return jsonify({'success': True, 'message': 'Balance transfer successful'})
     else:
         return jsonify({'success': False, 'message': 'Insufficient funds or invalid amount'}), 400
+
+@app.route('/add_user_form')
+def add_user_form():
+    return render_template('add_user_form.html')
+
+@app.route('/add_user', methods=['POST'])
+def add_user():
+    data = request.form.to_dict()
+    username = data.get('username')
+    password = data.get('password')
+    balance = float(data.get('balance', 0))
+    first_name = data.get('first_name', '')
+    last_name = data.get('last_name', '')
+
+    try:
+        cursor.execute('INSERT INTO users (username, password, balance, first_name, last_name) VALUES (?, ?, ?, ?, ?)',
+                       (username, password, balance, first_name, last_name))
+        conn.commit()
+
+        return jsonify({'success': True, 'message': 'User added successfully'})
+    except sqlite3.IntegrityError:
+        return jsonify({'success': False, 'message': 'Username already exists'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error adding user: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='10.0.0.69')
